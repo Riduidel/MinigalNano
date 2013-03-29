@@ -22,43 +22,24 @@ USAGE EXAMPLE:
 File: createthumb.php
 Example: <img src="createthumb.php?filename=photo.jpg&amp;width=100&amp;height=100">
 */
-//	error_reporting(E_ALL);
+//    error_reporting(E_ALL);
 	error_reporting(0);
 /*
-if (preg_match("/.jpg$|.jpeg$/i", $_GET['filename'])) header('Content-type: image/jpeg');
-if (preg_match("/.gif$/i", $_GET['filename'])) header('Content-type: image/gif');
-if (preg_match("/.png$/i", $_GET['filename'])) header('Content-type: image/png');
+if (preg_match("/.jpg$|.jpeg$/i", $previewedFile)) header('Content-type: image/jpeg');
+if (preg_match("/.gif$/i", $previewedFile)) header('Content-type: image/gif');
+if (preg_match("/.png$/i", $previewedFile)) header('Content-type: image/png');
 */
 
-function str_split_php4( $text, $split = 1 ) {
-    // place each character of the string into and array
-    $array = array();
-    for ( $i=0; $i < strlen( $text ); ){
-        $key = NULL;
-        for ( $j = 0; $j < $split; $j++, $i++ ) {
-            $key .= $text[$i];
-        }
-        array_push( $array, $key );
-    }
-    return $array;
-}
-
-function sanitize($name)
-{
-// Sanitize image filename (taken from http://iamcam.wordpress.com/2007/03/20/clean-file-names-using-php-preg_replace/ )
-$fname=$name;
-$replace="_";
-$pattern="/([[:alnum:]_\.-]*)/";
-$fname=str_replace(str_split_php4(preg_replace($pattern,$replace,$fname)),$replace,$fname);
-return $fname;
-}
+require 'common_functions.php';
 
 // Make sure the "thumbs" directory exists.
 if (!is_dir('thumbs')) { mkdir('thumbs',0700); }
 
+// putting that file name in a variable, as we will manipulate it a little
+$previewedFile = realpath($_GET['filename']);
 // Thumbnail file name and path.
 // (We always put thumbnails in jpg for simplification)
-$thumbname = 'thumbs/'.sanitize($_GET['filename']).'.jpg';
+$thumbname = 'thumbs/'.sanitize($previewedFile).'.jpg';
 
 if (file_exists($thumbname))  // If thumbnail exists, serve it.
 {
@@ -72,14 +53,14 @@ else // otherwise, generate thumbnail, send it and save it to file.
 {
 
 	// Display error image if file isn't found
-	if (!is_file($_GET['filename'])) {
+	if (!is_file($previewedFile)) {
 		header('Content-type: image/jpeg');
 		$errorimage = ImageCreateFromJPEG('images/questionmark.jpg');
 		ImageJPEG($errorimage,null,90);
 	}
 	
 	// Display error image if file exists, but can't be opened
-	if (substr(decoct(fileperms($_GET['filename'])), -1, strlen(fileperms($_GET['filename']))) < 4 OR substr(decoct(fileperms($_GET['filename'])), -3,1) < 4) {
+	if (substr(decoct(fileperms($previewedFile)), -1, strlen(fileperms($previewedFile))) < 4 OR substr(decoct(fileperms($previewedFile)), -3,1) < 4) {
 		header('Content-type: image/jpeg');
 		$errorimage = ImageCreateFromJPEG('images/cannotopen.jpg');
 		ImageJPEG($errorimage,null,90);
@@ -91,7 +72,7 @@ else // otherwise, generate thumbnail, send it and save it to file.
 	$yoord = 0;
 
     if ($_GET['size'] == "") $_GET['size'] = 120; //
-       $imgsize = GetImageSize($_GET['filename']);
+       $imgsize = GetImageSize($previewedFile);
        $width = $imgsize[0];
        $height = $imgsize[1];
       if ($width > $height) { // If the width is greater than the height it’s a horizontal picture
@@ -103,9 +84,9 @@ else // otherwise, generate thumbnail, send it and save it to file.
       }
 
     // Rotate JPG pictures
-    if (preg_match("/.jpg$|.jpeg$/i", $_GET['filename'])) {
+    if (preg_match("/.jpg$|.jpeg$/i", $previewedFile)) {
 		if (function_exists('exif_read_data') && function_exists('imagerotate')) {
-			$exif = exif_read_data($_GET['filename']);
+			$exif = exif_read_data($previewedFile);
 			$ort = $exif['IFD0']['Orientation'];
 			$degrees = 0;
 		    switch($ort)
@@ -122,15 +103,15 @@ else // otherwise, generate thumbnail, send it and save it to file.
 	}
 	
          $target = ImageCreatetruecolor($_GET['size'],$_GET['size']);
-         if (preg_match("/.jpg$/i", $_GET['filename'])) $source = ImageCreateFromJPEG($_GET['filename']);
-         if (preg_match("/.gif$/i", $_GET['filename'])) $source = ImageCreateFromGIF($_GET['filename']);
-         if (preg_match("/.png$/i", $_GET['filename'])) $source = ImageCreateFromPNG($_GET['filename']);
+         if (preg_match("/.jpg$/i", $previewedFile)) $source = ImageCreateFromJPEG($previewedFile);
+         if (preg_match("/.gif$/i", $previewedFile)) $source = ImageCreateFromGIF($previewedFile);
+         if (preg_match("/.png$/i", $previewedFile)) $source = ImageCreateFromPNG($previewedFile);
          imagecopyresampled($target,$source,0,0,$xoord,$yoord,$_GET['size'],$_GET['size'],$width,$height);
 		 imagedestroy($source);
 
-         //if (preg_match("/.jpg$/i", $_GET['filename'])) ImageJPEG($target,null,90);
-         //if (preg_match("/.gif$/i", $_GET['filename'])) ImageGIF($target,null,90);
-         //if (preg_match("/.png$/i", $_GET['filename'])) ImageJPEG($target,null,90); // Using ImageJPEG on purpose
+         //if (preg_match("/.jpg$/i", $previewedFile)) ImageJPEG($target,null,90);
+         //if (preg_match("/.gif$/i", $previewedFile)) ImageGIF($target,null,90);
+         //if (preg_match("/.png$/i", $previewedFile)) ImageJPEG($target,null,90); // Using ImageJPEG on purpose
          ob_start(); // Start output buffering.
          header('Content-type: image/jpeg'); // We always render the thumbnail in JPEG even if the source is GIF or PNG.
 		 ImageJPEG($target,null,80);
