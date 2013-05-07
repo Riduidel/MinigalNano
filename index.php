@@ -74,7 +74,7 @@ function is_directory($filepath) {
 	}
 }
 
-function padstring($name, $length) {
+function padstring($name, $length=NULL) {
 	global $label_max_length;
 	if (!isset($length)) $length = $label_max_length;
 	if (strlen($name) > $length) {
