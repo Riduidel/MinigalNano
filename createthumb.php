@@ -30,6 +30,7 @@ if (preg_match("/.gif$/i", $previewedFile)) header('Content-type: image/gif');
 if (preg_match("/.png$/i", $previewedFile)) header('Content-type: image/png');
 */
 
+require 'config.php';
 require 'common_functions.php';
 
 // Make sure the "thumbs" directory exists.
@@ -39,7 +40,13 @@ if (!is_dir('thumbs')) { mkdir('thumbs',0700); }
 $previewedFile = realpath($_GET['filename']);
 // Thumbnail file name and path.
 // (We always put thumbnails in jpg for simplification)
-$thumbname = 'thumbs/'.sanitize($previewedFile).'.jpg';
+$thumb_base_name ="will be filled in now";
+if($include_directory_in_thumbnail_name) {
+    $thumb_base_name = $previewedFile;
+} else {
+    $thumb_base_name = basename($previewedFile);
+}
+$thumbname = 'thumbs/'.sanitize($thumb_base_name).'.jpg';
 
 if (file_exists($thumbname))  // If thumbnail exists, serve it.
 {
