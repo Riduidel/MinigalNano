@@ -123,8 +123,10 @@ function createImagePathFor($file, $metadata, $pathTransformation) {
  */
 function linkImageInto($imageFile, $foldersArray) {
     $targetFolder = "photos/" . implode("/", $foldersArray);
-    $filename = basename($imageFile);
-    mkdir($targetFolder, 0777 /* default total access right set */, true /* recursively create ! */);
+    $filename = sanitize(basename($imageFile));
+    if(!file_exists($targetFolder)) {
+        mkdir($targetFolder, 0777 /* default total access right set */, true /* recursively create ! */);
+    }
     $targetPath = $targetFolder . "/" . $filename;
     if(file_exists($targetPath)) {
         return "file already exists in " . $targetPath;
@@ -171,7 +173,7 @@ $requiredPaths = array(
 /*
  * This is the path from which we will read all images
  */
-$startPath = "photo-storage/2013";
+$startPath = "source/2013";
 
 
 ?>
