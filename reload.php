@@ -17,6 +17,7 @@ define("COMMENTS_IPTC_KEY", "2#227");
 
 require 'common_functions.php';
 
+header('Content-Type: text/html; charset=utf-8'); // We use UTF-8 for proper international characters handling.
 
 /**
  * Reading directory list, courtesy of http://www.laughing-buddha.net/php/dirlist/
@@ -123,7 +124,7 @@ function createImagePathFor($file, $metadata, $pathTransformation) {
  */
 function linkImageInto($imageFile, $foldersArray) {
     $targetFolder = "photos/" . implode("/", $foldersArray);
-    $filename = sanitize(basename($imageFile));
+    $filename = sanitize(mb_convert_encoding(basename($imageFile), "UTF-8"));
     if(!file_exists($targetFolder)) {
         mkdir($targetFolder, 0777 /* default total access right set */, true /* recursively create ! */);
     }
@@ -150,6 +151,7 @@ function linkImageInto($imageFile, $foldersArray) {
  */
 function generatePathsFor($file, $metadata, $usedPaths) {
     $returned = "<ul>";
+//	error_log("file " . basename($file) . " encoded as " . mb_detect_encoding(basename($file)));
     foreach($usedPaths as $baseFolder => $pathTransformation) {
         $imagePath = createImagePathFor($file, $metadata, $pathTransformation);
         // now create required folders
@@ -178,6 +180,9 @@ $startPath = "source/2013";
 
 ?>
 <html>
+	<head>
+		<link rel="stylesheet" href="css/mediaboxAdvBlack21.css" type="text/css" media="screen" />
+	</head>
     <body>
         <h1>Reloading from ? <?= realpath($startPath) ?></h1>
         Damn, it work! 
@@ -186,7 +191,7 @@ $startPath = "source/2013";
         $imageMetadatas = getImagesMetadatas($startPath);
         foreach($imageMetadatas as $file => $metadata) { ?>
             <li>
-            <?= $file ?> => <?= generatePathsFor($file, $metadata, $requiredPaths); ?>
+            <?= mb_convert_encoding($file, "UTF-8") ?> => <?= generatePathsFor($file, $metadata, $requiredPaths); ?>
             </li>
         <?php } ?>
         </ul>
