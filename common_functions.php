@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 define("SANITIZE_TEST", "test_for_sanitize");
 define("REMOVE_ACCENTS_TEST", "test_for_remove_accents");
 
@@ -42,10 +42,10 @@ function sanitize($name)
 }
 
 if(array_key_exists(SANITIZE_TEST, $_GET)) {
-    echo "sanitize return " . sanitize($_GET[SANITIZE_TEST]);
+    echo "sanitize return \"" . sanitize($_GET[SANITIZE_TEST]) . "\"";
 }
 
 if(array_key_exists(REMOVE_ACCENTS_TEST, $_GET)) {
-    echo "remove accents return " . remove_accents($_GET[REMOVE_ACCENTS_TEST]);
+    echo "remove accents return \"" . remove_accents($_GET[REMOVE_ACCENTS_TEST]) . "\"";
 }
 ?>
