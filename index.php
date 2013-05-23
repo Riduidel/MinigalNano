@@ -29,7 +29,7 @@ by Sébastien SAUVAGE.
 //-----------------------
 //	error_reporting(E_ERROR);
 //	error_reporting(E_ALL);
-	error_reporting(-1);
+//	error_reporting(-1);
 /*
 	$mtime = microtime();
 	$mtime = explode(" ",$mtime);
