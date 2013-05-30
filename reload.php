@@ -15,6 +15,8 @@ define("STREET_IPTC_KEY", "2#092");
 
 define("COMMENTS_IPTC_KEY", "2#227");
 
+define("ENCODING", "UTF-8");
+
 require 'common_functions.php';
 
 header('Content-Type: text/html; charset=utf-8'); // We use UTF-8 for proper international characters handling.
@@ -35,32 +37,13 @@ function getDirectoryList ($directory)  {
     while ($file = readdir($handler)) {
         // if file isn't this directory or its parent, add it to the results
         if ($file != "." && $file != "..") {
-        $results[] = realpath($realPath . "/" . $file);
+			$results[] = realpath($realPath . "/" . $file);
         }
     }
     // tidy up: close the handler
     closedir($handler);
     // done!
     return $results;
-}
-
-/**
- * If file is an image, load the parsable image metadatas into return value
- * @param file the file to load metadatas from
- * @return image metadatas if possible, false elsewhere
- */
-function parseMetadatasFor($file) {
-    $sizeArray = getimagesize($file, $metadatas);
-    // yeah instead of simply returning an image size, this method return an array of 7 value, some of which themselves
-    // being arrays. And specifically, the element 2 contains the image type
-    $imageType = $sizeArray[2];
-    if(in_array($imageType , array(IMAGETYPE_GIF , IMAGETYPE_JPEG ,IMAGETYPE_PNG , IMAGETYPE_BMP))) {
-        if (isset($metadatas["APP13"])) {
-            $iptc = iptcparse($metadatas["APP13"]);
-            return $iptc;
-        }
-    }
-    return false;
 }
 
 /**
@@ -78,6 +61,10 @@ function getImagesMetadatas($directory) {
             $metadatas = parseMetadatasFor($file);
             if($metadatas) {
                 $returned[$file] = $metadatas;
+				// Generate a "nice" log message
+//				$message = basename($file);
+//				$message .= "\n" . print_r($metadatas, true);
+//				error_log($message);
             }
         }
     }
@@ -88,7 +75,7 @@ function transformMetadata($metadataElement, $metadataArray) {
     // calls sanitize function on each array element
     $sanitizedArray = array();
     foreach($metadataArray as $m) {
-        $sanitizedArray[] = sanitize($m);
+        $sanitizedArray[] = sanitize(mb_convert_encoding($m, ENCODING));
     }
 //    array_walk($metadataArray, 'sanitizeArrayElement');
     switch($metadataElement) {
@@ -110,8 +97,10 @@ function createImagePathFor($file, $metadata, $pathTransformation) {
     $returned = array();
     foreach($pathTransformation as $metadataElement) {
         // This is an array containing elements of that particular metadataElement
-        $usedMetadata = transformMetadata($metadataElement, $metadata[$metadataElement]);
-        $returned = array_merge($returned, $usedMetadata);
+		if(array_key_exists($metadataElement, $metadata)) {
+			$usedMetadata = transformMetadata($metadataElement, $metadata[$metadataElement]);
+			$returned = array_merge($returned, $usedMetadata);
+		}
     }
     // current path is only a part of the solution
     return $returned;
@@ -124,7 +113,7 @@ function createImagePathFor($file, $metadata, $pathTransformation) {
  */
 function linkImageInto($imageFile, $foldersArray) {
     $targetFolder = "photos/" . implode("/", $foldersArray);
-    $filename = sanitize(mb_convert_encoding(basename($imageFile), "UTF-8"));
+    $filename = sanitize(mb_convert_encoding(basename($imageFile), ENCODING));
     if(!file_exists($targetFolder)) {
         mkdir($targetFolder, 0777 /* default total access right set */, true /* recursively create ! */);
     }
@@ -180,9 +169,6 @@ $startPath = "source/2013";
 
 ?>
 <html>
-	<head>
-		<link rel="stylesheet" href="css/mediaboxAdvBlack21.css" type="text/css" media="screen" />
-	</head>
     <body>
         <h1>Reloading from ? <?= realpath($startPath) ?></h1>
         Damn, it work! 
@@ -191,7 +177,7 @@ $startPath = "source/2013";
         $imageMetadatas = getImagesMetadatas($startPath);
         foreach($imageMetadatas as $file => $metadata) { ?>
             <li>
-            <?= mb_convert_encoding($file, "UTF-8") ?> => <?= generatePathsFor($file, $metadata, $requiredPaths); ?>
+            <?= mb_convert_encoding($file, ENCODING) ?> => <?= generatePathsFor($file, $metadata, $requiredPaths); ?>
             </li>
         <?php } ?>
         </ul>

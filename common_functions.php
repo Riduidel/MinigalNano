@@ -1,6 +1,8 @@
-﻿<?php
+﻿<pre>
+<?php
 define("SANITIZE_TEST", "test_for_sanitize");
 define("REMOVE_ACCENTS_TEST", "test_for_remove_accents");
+define("PARSE_METADATAS_TEST", "test_for_parse_metadatas");
 
 function str_split_php4( $text, $split = 1 ) {
     // place each character of the string into and array
@@ -32,6 +34,25 @@ function remove_accents($str)
     return str_replace($from, $to, $str);
 }
 
+/**
+ * If file is an image, load the parsable image metadatas into return value
+ * @param file the file to load metadatas from
+ * @return image metadatas if possible, false elsewhere
+ */
+function parseMetadatasFor($file) {
+    $sizeArray = getImageSize($file, $metadatas);
+    // yeah instead of simply returning an image size, this method return an array of 7 value, some of which themselves
+    // being arrays. And specifically, the element 2 contains the image type
+    $imageType = $sizeArray[2];
+    if(in_array($imageType , array(IMAGETYPE_GIF , IMAGETYPE_JPEG ,IMAGETYPE_PNG , IMAGETYPE_BMP))) {
+        if (isset($metadatas["APP13"])) {
+            $iptc = iptcParse($metadatas["APP13"]);
+            return $iptc;
+        }
+    }
+    return false;
+}
+
 function sanitize($name)
 {
     // Sanitize image filename (taken from http://iamcam.wordpress.com/2007/03/20/clean-file-names-using-php-preg_replace/ )
@@ -48,4 +69,11 @@ if(array_key_exists(SANITIZE_TEST, $_GET)) {
 if(array_key_exists(REMOVE_ACCENTS_TEST, $_GET)) {
     echo "remove accents return \"" . remove_accents($_GET[REMOVE_ACCENTS_TEST]) . "\"";
 }
+
+if(array_key_exists(PARSE_METADATAS_TEST, $_GET)) {
+	$filename = $_GET[PARSE_METADATAS_TEST];
+	echo $filename . "\n";
+    echo "test for parseMetadata return \"" . print_r(parseMetadatasFor($filename), true) . "\"";
+}
 ?>
+</pre>
