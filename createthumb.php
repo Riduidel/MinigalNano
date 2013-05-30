@@ -142,17 +142,20 @@ function create_thumbnail($imageFile, $thumbFile, $thumbnailSize) {
 // Make sure the "thumbs" directory exists.
 if (!is_dir('thumbs')) { mkdir('thumbs',0700); }
 
-// putting that file name in a variable, as we will manipulate it a little
-$previewedFile = realpath($_GET['filename']);
+if(isset($_GET, 'filename')) {
+	// putting that file name in a variable, as we will manipulate it a little
+	$previewedFile = realpath($_GET['filename']);
 
-$thumbname = get_thumb_name($previewedFile, $include_directory_in_thumbnail_name);
+	$thumbname = get_thumb_name($previewedFile, $include_directory_in_thumbnail_name);
 
-if (file_exists($thumbname)) {
-// If thumbnail exists, serve it.
-	stream_image_file($thumbname);
+	if (file_exists($thumbname)) {
+	// If thumbnail exists, serve it.
+		stream_image_file($thumbname);
+	} else {
+	// otherwise, generate thumbnail, send it and save it to file.
+		create_thumbnail($previewedFile, $thumbname, $_GET['size']);
+	}
 } else {
-// otherwise, generate thumbnail, send it and save it to file.
-	create_thumbnail($previewedFile, $thumbname, $_GET['size']);
+	// when there is no thumb given as parameter, just try to find the first file which have no thumb, then generate one thumb for it (and only for that very first file)
 }
-
 ?>
