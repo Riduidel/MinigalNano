@@ -45,7 +45,7 @@ function get_thumb_name($inputName, $includeDir) {
 	} else {
 		$thumb_base_name = basename($inputName);
 	}
-	return 'thumbs/'.sanitize($thumb_base_name).'.jpg';
+	return THUMBS . '/'.sanitize($thumb_base_name).'.jpg';
 }
 
 function stream_image_file($thumbFile) {
@@ -136,16 +136,44 @@ function create_thumbnail($imageFile, $thumbFile, $thumbnailSize) {
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////// this is the real http response script ///////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-// Make sure the "thumbs" directory exists.
-if (!is_dir('thumbs')) { mkdir('thumbs',0700); }
+/**
+ * Generate first missing thumbnail below that path
+ */
+function generateFirstMissingThumbnail($includeDir) {
+	return generateFirstMissingThumbnailIn(realpath(PHOTOS), $includeDir);
+}
 
-if(isset($_GET, 'filename')) {
-	// putting that file name in a variable, as we will manipulate it a little
-	$previewedFile = realpath($_GET['filename']);
+/**
+ * Locate in that sub-tree the thumbnail for the first file which has no one generated, and output various paths
+ * infos
+ * @param directory the directory we search files without thumbnails in
+ * @return a boolean containing true if something has been generated, false elsewhen
+ */
+function generateFirstMissingThumbnailIn($directory, $includeDir) {
+	$generatedSomething = false;
+    $directoryFiles = getDirectoryList($directory);
+    foreach($directoryFiles as $file) {
+		if(!$generatedSomething && file_exists($file)) {
+			if(is_dir($file)) {
+				$generatedSomething = $generatedSomething || generateFirstMissingThumbnailIn($file, $includeDir);
+			} else {
+				// OK, it's a file so check if it has an associated thumbnail
+				$thumbFile = get_thumb_name($file, $includeDir);
+				if(file_exists($thumbFile)) {
+					// nothing to do as the file already exist
+				} else {
+					// hey ! that's the file we wanted !
+//					echo $file . " will have its thumbnail generated";
+					generateIfMissing($file, $includeDir, "");
+					$generatedSomething = true;
+				}
+			}
+		}
+    }
+    return $generatedSomething;
+}
 
+function generateIfMissing($previewedFile, $include_directory_in_thumbnail_name, $thumbSize) {
 	$thumbname = get_thumb_name($previewedFile, $include_directory_in_thumbnail_name);
 
 	if (file_exists($thumbname)) {
@@ -153,9 +181,23 @@ if(isset($_GET, 'filename')) {
 		stream_image_file($thumbname);
 	} else {
 	// otherwise, generate thumbnail, send it and save it to file.
-		create_thumbnail($previewedFile, $thumbname, $_GET['size']);
+		create_thumbnail($previewedFile, $thumbname, $thumbSize);
 	}
-} else {
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////// this is the real http response script ///////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+// Make sure the "thumbs" directory exists.
+if (!is_dir(THUMBS)) { mkdir(THUMBS,0700); }
+
+if(array_key_exists('filename', $_GET)) {
+	// putting that file name in a variable, as we will manipulate it a little
+	$previewedFile = realpath($_GET['filename']);
+
+	generateIfMissing($previewedFile, $include_directory_in_thumbnail_name, $_GET['size']);
+} elseif(count($_GET)==0) {
 	// when there is no thumb given as parameter, just try to find the first file which have no thumb, then generate one thumb for it (and only for that very first file)
+	echo generateFirstMissingTHumbnail($include_directory_in_thumbnail_name);
 }
 ?>

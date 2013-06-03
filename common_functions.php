@@ -4,6 +4,35 @@ define("SANITIZE_TEST", "test_for_sanitize");
 define("REMOVE_ACCENTS_TEST", "test_for_remove_accents");
 define("PARSE_METADATAS_TEST", "test_for_parse_metadatas");
 
+define("THUMBS", "thumbs");
+define("PHOTOS", "photos");
+
+
+/**
+ * Reading directory list, courtesy of http://www.laughing-buddha.net/php/dirlist/
+ * @param directory the directory we want to list files of
+ * @return a simple array containing the list of absolute file paths. Notice that current file (".") and parent one("..")
+ * are not listed here
+ */
+function getDirectoryList ($directory)  {
+    $realPath = realpath($directory);
+    // create an array to hold directory list
+    $results = array();
+    // create a handler for the directory
+    $handler = opendir($directory);
+    // open directory and walk through the filenames
+    while ($file = readdir($handler)) {
+        // if file isn't this directory or its parent, add it to the results
+        if ($file != "." && $file != "..") {
+			$results[] = realpath($realPath . "/" . $file);
+        }
+    }
+    // tidy up: close the handler
+    closedir($handler);
+    // done!
+    return $results;
+}
+
 function str_split_php4( $text, $split = 1 ) {
     // place each character of the string into and array
     $array = array();

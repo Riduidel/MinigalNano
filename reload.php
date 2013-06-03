@@ -22,31 +22,6 @@ require 'common_functions.php';
 header('Content-Type: text/html; charset=utf-8'); // We use UTF-8 for proper international characters handling.
 
 /**
- * Reading directory list, courtesy of http://www.laughing-buddha.net/php/dirlist/
- * @param directory the directory we want to list files of
- * @return a simple array containing the list of absolute file paths. Notice that current file (".") and parent one("..")
- * are not listed here
- */
-function getDirectoryList ($directory)  {
-    $realPath = realpath($directory);
-    // create an array to hold directory list
-    $results = array();
-    // create a handler for the directory
-    $handler = opendir($directory);
-    // open directory and walk through the filenames
-    while ($file = readdir($handler)) {
-        // if file isn't this directory or its parent, add it to the results
-        if ($file != "." && $file != "..") {
-			$results[] = realpath($realPath . "/" . $file);
-        }
-    }
-    // tidy up: close the handler
-    closedir($handler);
-    // done!
-    return $results;
-}
-
-/**
  * Build a hash linking source image paths to hash containing various image metadatas (detailled later)
  * @param directory directory in which images and metadatas will be recursively searched
  * @return a hash linking imges absolute paths to their metadatas
@@ -112,7 +87,7 @@ function createImagePathFor($file, $metadata, $pathTransformation) {
  * @param foldersArray an array of folders that will be joined below the photos one
  */
 function linkImageInto($imageFile, $foldersArray) {
-    $targetFolder = "photos/" . implode("/", $foldersArray);
+    $targetFolder = PHOTOS . "/" . implode("/", $foldersArray);
     $filename = sanitize(mb_convert_encoding(basename($imageFile), ENCODING));
     if(!file_exists($targetFolder)) {
         mkdir($targetFolder, 0777 /* default total access right set */, true /* recursively create ! */);
